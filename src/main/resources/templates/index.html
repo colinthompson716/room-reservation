@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8">
+    <title>Welcome Page</title>
+    <link rel="stylesheet" th:href="@{/home.css}">
+  </head>
+
+  <body>
+    <h1>Welcome to Luddy Room Reservation</h1>
+    <div class="login-container">
+      <a th:if="${loggedInUser == null}" href="/login" class="login-btn">Login</a>
+      <a th:if="${loggedInUser != null}" href="/logout" class="login-btn" style="background-color:#a84f4f;">Logout</a>
+    </div>
+
+    <div class="button-container">
+      <a href="/reservations" class="btn">My Reservations</a>
+      <a href="/rooms" class="btn">Book a Room</a>
+    </div>
+  </body>
+</html>

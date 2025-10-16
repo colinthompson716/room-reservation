@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reserve Room</title>
+  <link rel="stylesheet" th:href="@{/rooms.css}">
+</head>
+<body>
+  <h1 th:text="'Reserve ' + ${room.roomName}"></h1>
+
+  <div class="nav-buttons">
+    <a href="/" class="btn">Home</a>
+    <a href="/rooms" class="btn">Back to Rooms</a>
+    <a href="/reservations" class="btn">My Reservations</a>
+  </div>
+
+  <p th:if="${error}" style="color: red;" th:text="${error}"></p>
+  <p th:if="${message}" style="color: green;" th:text="${message}"></p>
+
+  <form th:action="@{/reserve}" method="post" class="search-form">
+    <input type="hidden" name="roomId" th:value="${room.id}" />
+
+    <label for="date">Date</label><br>
+    <input id="date" name="date" type="date" required><br><br>
+
+    <label for="time">Select a start time</label><br>
+      <select id="time" name="time" required>
+        <option th:each="slot : ${timeSlots}" 
+          th:value="${slot}" 
+          th:text="${slot}">
+        </option>
+      </select><br><br>
+
+    <label for="duration">Duration</label><br>
+    <select id="duration" name="durationMinutes" required>
+      <option value="30">30 minutes</option>
+      <option value="60">1 hour</option>
+      <option value="120">2 hours</option>
+    </select><br><br>
+
+    <button type="submit" class="reserve-button available">Confirm Reservation</button>
+  </form>
+</body>
+</html>
