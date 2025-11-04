@@ -8,17 +8,19 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 public class Reservation {
     
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @Id 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "room_id", nullable = false)
     @JsonIgnore
     private Room room;
 
-
-    @Column(nullable = false)
-    private String username;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
+    private User user;
 
     @Column(nullable = false)
     private LocalDateTime startTime;
@@ -28,22 +30,22 @@ public class Reservation {
 
     public Reservation() {}
 
-    public Reservation(Room room, String username, LocalDateTime startTime, LocalDateTime endTime) {
+    public Reservation(Room room, User user, LocalDateTime startTime, LocalDateTime endTime) {
         this.room = room;
-        this.username = username;
+        this.user = user;
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
-    public Long getId() {return id;}
+    public Integer getId() {return id;}
     public Room getRoom() {return room;}
-    public String getUsername() {return username;}
+    public User getUser() {return user;}
     public LocalDateTime getStartTime() {return startTime;}
     public LocalDateTime getEndTime() {return endTime;}
    
-    public void setId(Long id) {this.id = id;}
+    public void setId(Integer id) {this.id = id;}
     public void setRoom(Room room) {this.room = room;}
-    public void setUsername(String username) {this.username = username;}
+    public void setUser(User user) {this.user = user;}
     public void setStartTime(LocalDateTime startTime) {this.startTime = startTime;}
     public void setEndTime(LocalDateTime endTime) {this.endTime = endTime;}
 

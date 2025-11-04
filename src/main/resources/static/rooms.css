@@ -1,9 +1,24 @@
+/* ---------- GENERAL ---------- */
 body {
     text-align: center;
-    font-family: Georgia, 'Times New Roman', Times, serif ;
+    font-family: Georgia, 'Times New Roman', Times, serif;
     background-color: azure;
 }
 
+h1 {
+    font-size: 2.5rem;
+    color: #1a3a2f;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+h2, h3 {
+    color: #1a3a2f;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+/* ---------- TABLE STYLING ---------- */
 table {
     margin: 30px auto;
     border-collapse: collapse;
@@ -13,73 +28,39 @@ table {
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
 
-th {
-    padding: 12px 25px;
+th, td {
     border: 2px solid #ccc;
-    background-color: #bbc1c5;
+    padding: 12px 25px;
     font-size: 18px;
-    color: #333;
+}
+
+th {
+    background-color: #bbc1c5;
     text-transform: uppercase;
 }
 
 td {
-    padding: 10px 20px;
-    border: 2px solid #ccc;
     font-size: 20px;
     color: #444;
 }
 
-tr:nth-child(even) {
-    background-color: #f3f6f4;
+tr:nth-child(even) { 
+    background-color: #f3f6f4; 
 }
 
 tr:hover {
-    background-color: #9debef; 
+    background-color: #9debef;
     transition: background-color 0.2s ease;
 }
 
-.search-form {
-    margin-bottom: 20px;
-}
-
-.search-input {
-    width: 400px;
-    height: 40px;
-    font-size: 18px;
-    padding: 8px 12px;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    outline: none;
-}
-
-.search-input:focus {
-    border-color: #6fa87d;
-}
-
-.search-button {
-    height: 40px;
-    font-size: 18px;
-    border: none;
-    border-radius: 8px;
-    background-color: gray;
-    color: white;
-    cursor: pointer;
-    margin-left: 8px;
-    transition: 0.3s;
-}
-
-.search-button:hover {
-    background-color: #6fa87d;
-}
-
+/* ---------- RESERVE BUTTONS ---------- */
 .reserve-button {
     border: none;
     border-radius: 8px;
-    padding: 16px 32px;
-    margin-left: 8px;
+    padding: 10px 20px;
     cursor: pointer;
     font-size: 18px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .reserve-button.available {
@@ -87,31 +68,274 @@ tr:hover {
     color: white;
 }
 
-.reserve-button.available-hover {
+.reserve-button.available:hover {
     background-color: #4e7d5a;
+    transform: scale(1.05);
 }
 
 .reserve-button.unavailable {
-  background-color: #ccc;
-  color: #666;
-  cursor: not-allowed;
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
 }
 
-.nav-buttons {
-  margin-bottom: 20px;
+/* ---------- FORM CONTAINER ---------- */
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 25px 40px;
+    margin: 20px auto;
+    border-radius: 15px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 600px;
+    gap: 10px;
 }
 
-.nav-buttons .btn {
-  margin: 0 10px;
-  background-color: gray;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  text-decoration: none;
-  transition: 0.3s;
+/* ---------- FORM FIELDS ---------- */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 400px;
 }
 
-.nav-buttons .btn:hover {
-  background-color: #6fa87d;
+form label {
+    font-weight: bold;
+    margin-bottom: 4px;
+    text-align: left;
+    width: 100%;
+    color: #333;
 }
+
+form input,
+form select {
+    width: 100%;
+    max-width: 400px;
+    height: 40px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="number"] {
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+input:focus,
+select:focus {
+    border-color: #6fa87d;
+    box-shadow: 0 0 5px rgba(111, 168, 125, 0.5);
+    outline: none;
+}
+
+/* ---------- ADVANCED SECTION ---------- */
+#advanced {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 500px;
+    margin: 15px auto 5px auto;
+    padding: 0 10px;
+}
+
+#advanced label {
+    text-align: left;
+    width: 100%;
+    max-width: 400px;
+    font-weight: bold;
+}
+
+/* ---------- BUTTONS ---------- */
+form button,
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+form button {
+    background-color: #6fa87d;
+}
+
+form button:hover {
+    background-color: #4e7d5a;
+    transform: scale(1.05);
+}
+
+.btn {
+    background-color: gray;
+}
+
+.btn:hover {
+    background-color: #6fa87d;
+    transform: scale(1.05);
+}
+
+/* ---------- ADVANCED SEARCH BUTTON ---------- */
+.advanced-search {
+    background-color: #dc3545;
+    color: white;
+    font-weight: bold;
+    width: auto;
+    align-self: center;
+}
+
+.advanced-search:hover {
+    background-color: #b82e3a;
+    transform: scale(1.05);
+}
+
+/* ---------- ACTION BUTTON GROUP ---------- */
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* ---------- AUTH AND NAV BUTTONS ---------- */
+.auth-buttons {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+}
+
+.login-btn-top,
+.logout-btn {
+    position: absolute;
+    top: 20px;
+    right: 5px;
+    padding: 20px 35px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.login-btn-top { 
+    background-color: #6fa87d; 
+}
+
+.login-btn-top:hover { 
+    background-color: #4e7d5a; transform: scale(1.05); 
+}
+
+.logout-btn { 
+    background-color: #dc3545; 
+}
+.logout-btn:hover { 
+    background-color: #b82e3a; transform: scale(1.05); 
+}
+
+.reservations-btn {
+    display: inline-block;
+    margin-top: 90px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.reservations-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* --- INPUT ALIGNMENT --- */
+select#duration,
+input#endTime {
+    width: 100%;
+    max-width: 400px;
+    height: 40px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    margin-top: 10px;
+    display: block;
+}
+
+/* --- ADVANCED SECTION CENTERING --- */
+#advanced {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    max-width: 400px;
+    margin: 15px auto;
+    padding: 0 10px;
+}
+
+#advanced label {
+    text-align: left;
+    width: 100%;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+#advanced input,
+#advanced select {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 10px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 16px;
+}
+
+.enter-btn {
+    background-color: #6fa87d;
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    padding: 18px 60px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin: 20px auto;
+    display: block;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.enter-btn:hover {
+    background-color: #4e7d5a;
+    transform: scale(1.05);
+}
+
+

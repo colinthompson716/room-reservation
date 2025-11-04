@@ -4,157 +4,95 @@ import com.cothomp.room_reservation.data.ReservationRepository;
 import com.cothomp.room_reservation.data.RoomRepository;
 import com.cothomp.room_reservation.model.Reservation;
 import com.cothomp.room_reservation.model.Room;
-import jakarta.servlet.http.HttpSession;
+import com.cothomp.room_reservation.model.User;
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class ReservationController {
     
-    @Autowired
+    @Autowired 
     private RoomRepository roomRepository;
 
     @Autowired
     private ReservationRepository reservationRepository;
 
-    // showing the form, login is required
-   @GetMapping("/reserve/{roomId}")
-    public String showReserveForm(@PathVariable Long roomId, @RequestParam(required = false) String date, HttpSession session, Model model) {
-        String user = (String) session.getAttribute("loggedInUser");
-        if (user == null) { 
-            return "redirect:/login";
+    @PostMapping("/reserve/{roomId}")
+    @ResponseBody
+    public ResponseEntity<String> reserveRoom(
+        @PathVariable Integer roomId,
+        @RequestBody Map<String, String> payload,
+        HttpSession session) {
+
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("You must be logged in to reserve a room.");
         }
+
+        String date = payload.get("date");
+        String time = payload.get("time");
+        String durationStr = payload.get("duration");
+
+        if (date == null || time == null) {
+            return ResponseEntity.badRequest().body("Missing date or time.");
+        }
+
+        int durationMinutes = Integer.parseInt(durationStr);
+        LocalDateTime startTime = LocalDateTime.parse(date + "T" + time);
+        LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
 
         Room room = roomRepository.findById(roomId).orElse(null);
         if (room == null) {
-            model.addAttribute("error", "Room not found");
-            return "redirect:/rooms";
+            return ResponseEntity.badRequest().body("Room not found.");
         }
 
-        List<String> timeSlots = new ArrayList<>();
-        LocalTime start = LocalTime.of(8, 0);
-        LocalTime end = LocalTime.of(20, 0);
-
-        while (!start.isAfter(end.minusMinutes(30))) {
-            timeSlots.add(start.toString());
-            start = start.plusMinutes(30);
-        }
-
-
-        if (date != null && !date.isEmpty()) {
-            LocalDate selectedDate = LocalDate.parse(date);
-            List<Reservation> reservations = reservationRepository.findByRoom_IdAndStartTimeBetween(
-                roomId, 
-                selectedDate.atStartOfDay(), 
-                selectedDate.plusDays(1).atStartOfDay());
-
-            for (Reservation r : reservations) {
-                LocalTime reservedStart = r.getStartTime().toLocalTime();
-                timeSlots.remove(reservedStart.truncatedTo(ChronoUnit.MINUTES).toString());
-            }
-        }
-        model.addAttribute("room", room);
-        model.addAttribute("timeSlots", timeSlots);
-        model.addAttribute("loggedInUser", user);
-        return "reserve_form";
-    }
-
-    // handl users submitting the form
-    @PostMapping("/reserve")
-    public String createReservation(@RequestParam Long roomId, @RequestParam String date, @RequestParam String time, @RequestParam int durationMinutes, HttpSession session, Model model) {
-        String user = (String) session.getAttribute("loggedInUser");
-        if (user == null) { 
-            return "redirect:/login";
-        }
-
-        Room room = roomRepository.findById(roomId).orElse(null);
-
-        if (room == null) {
-            model.addAttribute("error", "Room not found.");
-            return "redirect:/rooms";
-        }
-
-        // build start time and end time
-        LocalDate d = LocalDate.parse(date);
-        LocalTime t = LocalTime.parse(time);
-
-        if (t.isBefore(LocalTime.of(8,0)) || t.isAfter(LocalTime.of(20,0))) {
-            model.addAttribute("error", "Start time must be between 08:00 and 20:00.");
-            model.addAttribute("room", room);
-            model.addAttribute("timeSlots", generateTimeSlots());
-            return "reserve_form";
-        }
-
-        LocalDateTime start = LocalDateTime.of(d, t);
-        LocalDateTime end = start.plusMinutes(durationMinutes);
-
-        // make sure reservations are between 8am and 8pm
-        if (end.toLocalTime().isAfter(LocalTime.of(20,0))) {
-            model.addAttribute("error", "Reservation must end by 20:00.");
-            model.addAttribute("room", room);
-            model.addAttribute("timeSlots", generateTimeSlots());
-            return "reserve_form";
-        }
-
-        // check for overlap in room reservations
-        List<Reservation> overlaps = 
-            reservationRepository.findByRoom_IdAndEndTimeAfterAndStartTimeBefore(room.getId(), start, end);
+        List<Reservation> overlaps = reservationRepository
+                .findByRoom_IdAndEndTimeAfterAndStartTimeBefore(roomId, startTime, endTime);
         if (!overlaps.isEmpty()) {
-            model.addAttribute("error", "That time is already booked. Choose another slot.");
-            model.addAttribute("room", room);
-            model.addAttribute("timeSlots", generateTimeSlots());
-            return "reserve_form";
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("That time slot is already booked. Please choose another.");
         }
-        reservationRepository.save(new Reservation(room, user, start, end));
-        return "redirect:/reservations";
+
+        Reservation reservation = new Reservation(room, user, startTime, endTime);
+        reservationRepository.save(reservation);
+
+        return ResponseEntity.ok("Room reserved successfully.");
     }
 
-    // my reservations by user
     @GetMapping("/reservations")   
     public String myReservations(HttpSession session, Model model) {
-        String user = (String) session.getAttribute("loggedInUser");
+        User user = (User) session.getAttribute("loggedInUser");
         if (user == null) {
             return "redirect:/login";
         }
-        List<Reservation> mine = reservationRepository.findByUsernameOrderByStartTimeDesc(user);
+
+        List<Reservation> mine = reservationRepository.findByUserOrderByStartTimeDesc(user);
         model.addAttribute("reservations", mine);
-        model.addAttribute("loggedInUser", user);
+        model.addAttribute("loggedInUser", user.getUsername());
         return "reservations";
     }
 
-    // cancel the reservation
     @PostMapping("/reservations/{id}/cancel")
-    public String cancelReservation(@PathVariable Long id, HttpSession session) {
-        String user = (String) session.getAttribute("loggedInUser");
+    public String cancelReservation(@PathVariable Integer id, HttpSession session) {
+        User user = (User) session.getAttribute("loggedInUser");
         if (user == null) return "redirect:/login";
 
         reservationRepository.findById(id).ifPresent(r -> {
-            if (user.equals(r.getUsername())) {
+            if (r.getUser().getId().equals(user.getId())) {
                 reservationRepository.deleteById(id);
             }
         });
         return "redirect:/reservations";
-    }
-
-    // generates all 30 minute timeslots for time slot dropdown bar
-    private List<String> generateTimeSlots() {
-        List<String> timeSlots = new ArrayList<>();
-        LocalTime start = LocalTime.of(8, 0);
-        LocalTime end = LocalTime.of(20, 0);
-        while (!start.isAfter(end.minusMinutes(30))) {
-            timeSlots.add(start.toString());
-            start = start.plusMinutes(30);
-        }
-        return timeSlots;
     }
 }

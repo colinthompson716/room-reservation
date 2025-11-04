@@ -7,10 +7,9 @@
 </head>
 <body>
   <h1>My Reservations</h1>
-
+  
   <div class="nav-buttons">
-    <a href="/" class="btn">Home</a>
-    <a href="/rooms" class="btn">Book a Room</a>
+    <a href="/" class="btn">Back to filter</a>
     <a href="/logout" class="btn" style="background-color:#a84f4f;">Logout</a>
   </div>
 
@@ -26,11 +25,11 @@
     <tbody>
       <tr th:each="r : ${reservations}">
         <td th:text="${r.room.roomName}"></td>
-        <td th:text="${#temporals.format(r.startTime, 'yyyy-MM-dd HH:mm')}"></td>
-        <td th:text="${#temporals.format(r.endTime, 'yyyy-MM-dd HH:mm')}"></td>
+        <td th:text="${#temporals.format(r.startTime, 'yyyy-MM-dd h:mm a')}"></td>
+        <td th:text="${#temporals.format(r.endTime, 'yyyy-MM-dd h:mm a')}"></td>
         <td>
           <form th:action="@{'/reservations/' + ${r.id} + '/cancel'}" method="post" style="display:inline;">
-            <button type="submit" class="reserve-button unavailable">Cancel</button>
+            <button type="submit" class="cancel-button">Cancel</button>
           </form>
         </td>
       </tr>

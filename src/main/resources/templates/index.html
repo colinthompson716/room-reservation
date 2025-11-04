@@ -1,21 +1,390 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <title>Welcome Page</title>
-    <link rel="stylesheet" th:href="@{/home.css}">
-  </head>
+<head>
+  <meta charset="UTF-8">
+  <title>Luddy Room Reservation</title>
+  <link rel="stylesheet" th:href="@{/rooms.css}">
+  <style>
+    .advanced { display: none; margin-top: 10px; }
+    .room-table { margin: 20px auto; border-collapse: collapse; width: 80%; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; }
+    th { background-color: #9bc1a5; }
+  </style>
+</head>
+<body>
+  <h1>Luddy Room Reservation</h1>
+  <h3>Find a Room</h3>
 
-  <body>
-    <h1>Welcome to Luddy Room Reservation</h1>
-    <div class="login-container">
-      <a th:if="${loggedInUser == null}" href="/login" class="login-btn">Login</a>
-      <a th:if="${loggedInUser != null}" href="/logout" class="login-btn" style="background-color:#a84f4f;">Logout</a>
-    </div>
+  <div class="auth-buttons">
+    <a th:if="${loggedInUser == null}" href="/login" class="login-btn-top">Login</a>
+    <a th:if="${loggedInUser != null}" href="/logout" class="logout-btn">Logout</a>
 
-    <div class="button-container">
-      <a href="/reservations" class="btn">My Reservations</a>
-      <a href="/rooms" class="btn">Book a Room</a>
-    </div>
-  </body>
+    <a 
+      th:if="${loggedInUser != null}" 
+      href="/reservations" 
+      class="reservations-btn">My Reservations</a>
+
+    <a 
+      th:if="${loggedInUser == null}" 
+      href="/login" 
+      class="reservations-btn">My Reservations</a>
+  </div>
+
+
+  <div>
+  <!-- Filter form -->
+    <form th:action="@{/}" method="get">
+      <div class="form-group">
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" th:value="${date}">
+      </div>
+
+      <div class="form-group">
+        <label for="time">Time:</label>
+        <select id="time" name="time"></select>
+      </div>
+
+      <div class="form-group">
+        <label for="minCapacity">Seats Required:</label>
+        <input type="number" id="minCapacity" name="minCapacity" th:value="${minCapacity}" min="1">
+      </div>
+
+      <button type="button" id="toggleBtn" class="advanced-search" onclick="toggleAdvanced()">Advanced Search ▼</button>
+
+      <div id="advanced" class="advanced">
+        <div class="form-group">
+          <label for="floor">Floor:</label>
+          <input type="number" id="floor" name="floor" th:value="${floor}" min="1">
+        </div>
+
+        <div class="form-group">
+          <label for="maxCapacity">Max Capacity:</label>
+          <input type="number" id="maxCapacity" name="maxCapacity" th:value="${maxCapacity}">
+        </div>
+
+        <div class="form-group">
+          <label for="requiresElevatorOrStairs">Requires Elevator/Stairs:</label>
+          <select id="requiresElevatorOrStairs" name="requiresElevatorOrStairs">
+            <option value="" th:selected="${requiresElevatorOrStairs == '' or requiresElevatorOrStairs == null}"></option>
+            <option value="true" th:selected="${requiresElevatorOrStairs != null and requiresElevatorOrStairs.equals('true')}">Yes</option>
+            <option value="false" th:selected="${requiresElevatorOrStairs != null and requiresElevatorOrStairs.equals('false')}">No</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="whiteboardFilter">Has Whiteboard:</label>
+          <select id="whiteboardFilter" name="whiteboardFilter">
+            <option value=""></option>
+            <option value="true" th:selected="${whiteboardFilter == 'true'}">Yes</option>
+            <option value="false" th:selected="${whiteboardFilter == 'false'}">No</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="projectorFilter">Has Projector:</label>
+          <select id="projectorFilter" name="projectorFilter">
+            <option value=""></option>
+            <option value="true" th:selected="${projectorFilter == 'true'}">Yes</option>
+            <option value="false" th:selected="${projectorFilter == 'false'}">No</option>
+          </select>
+        </div>
+      </div>
+
+      <input type="hidden" id="advancedUsed" name="advancedUsed" value="false">
+
+      <button type="submit" class="enter-btn">Enter</button>
+
+      <div class="button-group">
+        <a class="btn" style="background-color:gray; color:white; text-decoration:none;" onclick="clearFilters()">
+          Clear Filters
+        </a>
+
+        <a th:if="${!showAll}" th:href="@{/rooms/all}" class="btn" style="background-color:gray; color:white; text-decoration:none;">
+          List All Rooms
+        </a>
+
+        <a th:if="${showAll}" th:href="@{/rooms/hide}" class="btn" style="background-color:#dc3545; color:white; text-decoration:none;">
+          Hide All Rooms
+        </a>
+      </div>
+    </form>
+  </div>
+  <br>
+
+  <!-- Results section -->
+  <div th:if="${rooms != null and #lists.size(rooms) > 0}">
+    <h3>Available Rooms</h3>
+    <table class="room-table">
+      <thead>
+        <tr>
+          <th>Room Name</th>
+          <th>Seats</th>
+          <th th:if="${hasAdvancedFilter}">Max Capacity</th>
+          <th th:if="${hasAdvancedFilter}">Floor</th>
+          <th th:if="${hasAdvancedFilter}">Elevator/Stairs</th>
+          <th th:if="${hasAdvancedFilter}">Whiteboard</th>
+          <th th:if="${hasAdvancedFilter}">Projector</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="room : ${rooms}">
+          <td th:text="${room.roomName}"></td>
+          <td th:text="${room.seats}"></td>
+          <td th:if="${hasAdvancedFilter}" th:text="${room.maxCapacity}"></td>
+          <td th:if="${hasAdvancedFilter}" th:text="${room.floor}"></td>
+          <td th:if="${hasAdvancedFilter}" th:text="${room.requiresElevatorOrStairs} ? 'Yes' : 'No'"></td>
+          <td th:if="${hasAdvancedFilter}" th:text="${room.hasWhiteboard} ? 'Yes' : 'No'"></td>
+          <td th:if="${hasAdvancedFilter}" th:text="${room.hasProjector} ? 'Yes' : 'No'"></td>
+          <td>
+            <button 
+              th:if="${loggedInUser != null}" 
+              class="reserve-button available"
+              th:onclick="|reserveRoom(${room.id})|">
+              Reserve
+            </button>
+
+            <button 
+              th:if="${loggedInUser == null}" 
+              class="reserve-button unavailable"
+              th:onclick="|redirectToLoginWithRoom(${room.id})|">
+              Login to Reserve
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div th:if="${rooms == null or #lists.isEmpty(rooms)}">
+    <p>No rooms found. Try adjusting your filters.</p>
+  </div>
+
+  <!-- JavaScript Functions -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const adv = document.getElementById("advanced");
+      const btn = document.getElementById("toggleBtn");
+
+      adv.style.display = "none";
+
+      window.toggleAdvanced = function () {
+        const isHidden = adv.style.display === "none" || adv.style.display === "";
+        adv.style.display = isHidden ? "block" : "none";
+        btn.textContent = isHidden ? "Advanced Search ▲" : "Advanced Search ▼";
+      };
+    }); 
+  </script>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const dateInput   = document.getElementById("date");
+    const timeSelect  = document.getElementById("time");
+    const urlParams   = new URLSearchParams(window.location.search);
+    
+    const paramDate     = urlParams.get("date") || "";
+    const paramTime     = urlParams.get("time") || "";
+    const paramDuration = urlParams.get("duration") || "30";
+    timeSelect.disabled = true;
+
+    const durationGroup = document.createElement("div");
+    durationGroup.className = "form-group";
+
+    const durationSelect = document.createElement("select");
+    durationSelect.id = "duration";
+    durationSelect.name = "duration";
+    [{label:"30 minutes",value:30},{label:"1 hour",value:60},{label:"2 hours",value:120}]
+      .forEach(d => {
+        const o = document.createElement("option");
+        o.value = d.value; o.textContent = d.label;
+        durationSelect.appendChild(o);
+      });
+      durationGroup.appendChild(durationSelect);
+      timeSelect.insertAdjacentElement("afterend", durationGroup);
+      
+      const endTimeInput = document.createElement("input");
+      endTimeInput.type = "time";
+      endTimeInput.id = "endTime";
+      endTimeInput.name = "endTime";
+      endTimeInput.readOnly = true;
+      endTimeInput.style.marginTop = "10px";
+      durationGroup.appendChild(endTimeInput);
+      
+      function updateEndTime() {
+        const start = timeSelect.value;
+        const dur = parseInt(durationSelect.value);
+        if (!start || !dur) return;
+        
+        const [h, m] = start.split(":").map(Number);
+        const t = new Date();
+        t.setHours(h, m, 0, 0);
+        const e = new Date(t.getTime() + dur * 60000);
+        
+        const closingTime = new Date();
+        closingTime.setHours(20, 0, 0, 0);
+        
+        if (e > closingTime) {
+          alert("Reservations cannot go past 8:00 PM. Please choose an earlier time or shorter duration.");
+          durationSelect.value = "30";
+          updateEndTime(); 
+          return;
+        }
+        endTimeInput.value = String(e.getHours()).padStart(2, "0") + ":" + String(e.getMinutes()).padStart(2, "0");
+      }
+      
+      timeSelect.addEventListener("change", updateEndTime);
+      durationSelect.addEventListener("change", updateEndTime);
+      
+      const todayISO = new Date().toISOString().split("T")[0];
+      dateInput.setAttribute("min", todayISO);
+      
+      function buildTimes(filterPast) {
+        timeSelect.innerHTML = "";
+        const now = new Date();
+        const closingHour = 20; 
+        for (let hour = 8; hour < closingHour; hour++) {
+          for (let minute of [0, 30]) {
+            const candidate = new Date();
+            candidate.setHours(hour, minute, 0, 0);
+            if (filterPast && candidate < now) continue;
+
+            const hh = String(hour).padStart(2, "0");
+            const mm = String(minute).padStart(2, "0");
+            const label = `${(hour % 12 || 12)}:${mm} ${hour < 12 ? "AM" : "PM"}`;
+            const opt = document.createElement("option");
+            opt.value = `${hh}:${mm}`;
+            opt.textContent = label;
+            timeSelect.appendChild(opt);
+          }
+        }
+      }
+      
+      dateInput.addEventListener("change", () => {
+        timeSelect.disabled = false;
+        const isToday = dateInput.value === todayISO;
+        buildTimes(isToday);
+        timeSelect.selectedIndex = 0;
+        updateEndTime();
+      });
+      
+      if (!dateInput.value && paramDate) dateInput.value = paramDate;
+      
+      if (dateInput.value) {
+        timeSelect.disabled = false;
+        const isToday = dateInput.value === todayISO;
+        buildTimes(isToday);
+        
+        if (paramTime) {
+          const found = Array.from(timeSelect.options).some(o => o.value === paramTime);
+          if (found) timeSelect.value = paramTime;
+        }
+      }
+      durationSelect.value = paramDuration;
+      updateEndTime();
+    });
+  </script>
+
+  <script>
+  function reserveRoom(roomId) {
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value;
+    const duration = document.getElementById("duration") ? document.getElementById("duration").value : 30;
+    
+    if (!date || !time) {
+      alert("Please select a date and time before reserving.");
+      return;
+    }
+    
+    fetch(`/reserve/${roomId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, time, duration })
+    })
+    .then(response => {
+      if (response.ok) {
+        alert("Room successfully reserved!");
+        window.location.reload(); 
+      } else {
+        alert(" Failed to reserve room. It may already be booked.");
+      }
+    })
+    .catch(err => {
+      console.error("Error:", err);
+      alert("Something went wrong. Try again.");
+    });
+  }
+  </script>
+
+  <script>
+  function clearFilters() {
+    document.getElementById("date").value = "";
+    
+    const timeSelect = document.getElementById("time");
+    timeSelect.innerHTML = ""; 
+    timeSelect.disabled = true; 
+
+    const durationSelect = document.getElementById("duration");
+    if (durationSelect) {
+      durationSelect.selectedIndex = 0; 
+    }
+    
+    const endTimeInput = document.getElementById("endTime");
+    if (endTimeInput) {
+      endTimeInput.value = "";
+    }
+
+    const minCap = document.getElementById("minCapacity");
+    const maxCap = document.getElementById("maxCapacity");
+    const floor = document.getElementById("floor");
+    const requires = document.getElementById("requiresElevatorOrStairs");
+    const whiteboard = document.getElementById("whiteboardFilter");
+    const projector = document.getElementById("projectorFilter");
+
+    if (whiteboard) whiteboard.selectedIndex = 0;
+    if (projector) projector.selectedIndex = 0;
+    if (minCap) minCap.value = "";
+    if (maxCap) maxCap.value = "";
+    if (floor) floor.value = "";
+    if (requires) requires.selectedIndex = 0;
+  }
+  </script>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const advSection = document.getElementById("advanced");
+    const advFields = advSection.querySelectorAll("input, select");
+    const advUsed = document.getElementById("advancedUsed");
+    
+    form.addEventListener("submit", function (e) {
+      let anyAdvancedFilled = false;
+      advFields.forEach(field => {
+        if (field.value && field.value.trim() !== "") anyAdvancedFilled = true;
+      });
+      
+      advUsed.value = anyAdvancedFilled ? "true" : "false";
+      if (!anyAdvancedFilled) {
+        advSection.style.display = "none";
+        const toggleBtn = document.getElementById("toggleBtn");
+        if (toggleBtn) toggleBtn.textContent = "Advanced Search ▼";
+      }
+    });
+  });
+  </script>
+  
+  <script>
+  function redirectToLoginWithRoom(roomId) {
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value;
+    const duration = document.getElementById("duration") ? document.getElementById("duration").value : 30;
+    
+    if (!date || !time) {
+      alert("Please select a date and time before reserving.");
+      return;
+    }
+    const params = new URLSearchParams({ roomId, date, time, duration });
+    window.location.href = `/login?${params.toString()}`;
+  }
+  </script>
+</body>
 </html>
